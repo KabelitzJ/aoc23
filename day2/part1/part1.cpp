@@ -11,7 +11,7 @@
 
 #include <range/v3/all.hpp>
 
-auto split(std::string_view string, std::string_view delimiter) -> std::vector<std::string_view> {
+static constexpr auto split(std::string_view string, std::string_view delimiter) -> std::vector<std::string_view> {
   auto result = std::vector<std::string_view>{};
   auto last = std::size_t{0u};
   auto next = std::size_t{0u};

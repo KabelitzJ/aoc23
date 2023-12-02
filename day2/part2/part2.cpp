@@ -1,87 +1,66 @@
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <ranges>
-#include <optional>
+#include <charconv>
+#include <unordered_map>
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
 #include <range/v3/all.hpp>
 
-struct digit {
-  std::uint32_t value;
-  std::string_view string;
-}; // struct digit
+static constexpr auto split(std::string_view string, std::string_view delimiter) -> std::vector<std::string_view> {
+  auto result = std::vector<std::string_view>{};
+  auto last = std::size_t{0u};
+  auto next = std::size_t{0u};
+  
+  while ((next = string.find(delimiter, last)) != std::string_view::npos) {
+    result.push_back(string.substr(last, next - last));
+    last = next + delimiter.size();
+  } 
 
-static constexpr auto digits = std::array<digit, 9u>{
-  digit{ 1u, "one" },
-  digit{ 2u, "two" },
-  digit{ 3u, "three" },
-  digit{ 4u, "four" },
-  digit{ 5u, "five" },
-  digit{ 6u, "six" },
-  digit{ 7u, "seven" },
-  digit{ 8u, "eight" },
-  digit{ 9u, "nine" }
-};
+  result.push_back(string.substr(last));
 
-static constexpr auto max_digit_string_length = std::ranges::max(digits | std::views::transform([](auto digit) { return static_cast<std::uint32_t>(digit.string.size()); }));
-
-static constexpr auto matches_digit_string(std::string_view string) -> std::optional<std::uint32_t> {
-  if (string.empty()) {
-    return std::nullopt;
-  }
-
-  for (auto digit : digits | std::views::filter([string](auto digit) { return digit.string.size() <= string.size(); })) {
-    if (string.starts_with(digit.string)) {
-      return digit.value;
-    }
-  }
-
-  return std::nullopt;
-}
-
-auto char_to_value(char c) -> std::uint32_t {
-  return static_cast<std::uint32_t>(c - '0');
+  return result;
 }
 
 auto main() -> int {
-  auto input = std::ifstream{"day1/part2/input.txt"};
+  auto input = std::ifstream{"day2/part1/input.txt"};
 
   auto line = std::string{};
 
   auto sum = std::uint32_t{0u};
 
   while (std::getline(input, line)) {
-    auto head = std::uint32_t{0u};
-    auto numbers = std::vector<std::uint32_t>{};
+    auto game_id = std::uint32_t{};
+    auto sets = std::unordered_map<std::string_view, std::uint32_t>{};
+    
+    auto game_id_substring = line.substr(5u, line.find(':') - 5u);
+    std::from_chars(game_id_substring.data(), game_id_substring.data() + game_id_substring.size(), game_id);
 
-    while (head < line.size()) {
-      if (std::isdigit(line[head])) {
-        numbers.push_back(char_to_value(line[head]));
-      } else {
-        auto length = std::min(max_digit_string_length, static_cast<std::uint32_t>(line.size() - head));
+    auto sets_substring = line.substr(line.find(':') + 2u);
+    auto sets_list = split(sets_substring, "; ");
 
-        for (auto i : std::views::iota(1u, length + 1u)) {
-          if (auto digit = matches_digit_string(line.substr(head, i)); digit) {
-            numbers.push_back(*digit);
-            break;
-          }
-        }
+    for (auto set_string : sets_list) {
+      auto set_list = split(set_string, ", ");
+
+      for (auto color_string : set_list) {
+        auto color_value_pair = split(color_string, " ");
+
+        auto value = std::uint32_t{};
+        std::from_chars(color_value_pair[0].data(), color_value_pair[0].data() + color_value_pair[0].size(), value);
+
+        sets[color_value_pair[1]] = std::max(sets[color_value_pair[1]], value);
       }
-      
-      head++;
     }
 
-    fmt::print("{}\n", numbers);
-
-    sum += (numbers.front() * 10u + numbers.back());
+    sum += sets["red"] * sets["green"] * sets["blue"];
   }
 
   fmt::print("Sum: {}\n", sum);
-  
-  input.close();
 
   return 0;
 }
+                                 
