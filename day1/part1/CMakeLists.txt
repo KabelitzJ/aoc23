@@ -11,9 +11,6 @@ target_sources(
   ${PROJECT_NAME}
   PRIVATE
     "${PROJECT_SOURCE_DIR}/part1.cpp"
-  PUBLIC
-    FILE_SET HEADERS
-    FILES
 )
 
 target_include_directories(

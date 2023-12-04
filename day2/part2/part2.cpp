@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include <ranges>
+#include <vector>
 #include <charconv>
 #include <unordered_map>
 
@@ -11,12 +12,12 @@
 
 #include <range/v3/all.hpp>
 
-static constexpr auto split(std::string_view string, std::string_view delimiter) -> std::vector<std::string_view> {
-  auto result = std::vector<std::string_view>{};
+static auto split(std::string string, std::string delimiter) -> std::vector<std::string> {
+  auto result = std::vector<std::string>{};
   auto last = std::size_t{0u};
   auto next = std::size_t{0u};
   
-  while ((next = string.find(delimiter, last)) != std::string_view::npos) {
+  while ((next = string.find(delimiter, last)) != std::string::npos) {
     result.push_back(string.substr(last, next - last));
     last = next + delimiter.size();
   } 
@@ -35,7 +36,7 @@ auto main() -> int {
 
   while (std::getline(input, line)) {
     auto game_id = std::uint32_t{};
-    auto sets = std::unordered_map<std::string_view, std::uint32_t>{};
+    auto sets = std::unordered_map<std::string, std::uint32_t>{};
     
     auto game_id_substring = line.substr(5u, line.find(':') - 5u);
     std::from_chars(game_id_substring.data(), game_id_substring.data() + game_id_substring.size(), game_id);

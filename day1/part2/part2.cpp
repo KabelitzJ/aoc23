@@ -11,10 +11,10 @@
 
 struct digit {
   std::uint32_t value;
-  std::string_view string;
+  std::string string;
 }; // struct digit
 
-static constexpr auto digits = std::array<digit, 9u>{
+static auto digits = std::array<digit, 9u>{
   digit{ 1u, "one" },
   digit{ 2u, "two" },
   digit{ 3u, "three" },
@@ -26,9 +26,9 @@ static constexpr auto digits = std::array<digit, 9u>{
   digit{ 9u, "nine" }
 };
 
-static constexpr auto max_digit_string_length = std::ranges::max(digits | std::views::transform([](auto digit) { return static_cast<std::uint32_t>(digit.string.size()); }));
+static auto max_digit_string_length = std::ranges::max(digits | std::views::transform([](auto digit) { return static_cast<std::uint32_t>(digit.string.size()); }));
 
-static constexpr auto matches_digit_string(std::string_view string) -> std::optional<std::uint32_t> {
+static auto matches_digit_string(std::string string) -> std::optional<std::uint32_t> {
   if (string.empty()) {
     return std::nullopt;
   }
