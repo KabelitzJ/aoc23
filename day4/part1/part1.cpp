@@ -6,6 +6,7 @@
 #include <ranges>
 #include <charconv>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
@@ -28,38 +29,44 @@ static auto split(std::string string, std::string delimiter) -> std::vector<std:
 }
 
 auto main() -> int {
-  auto input = std::ifstream{"day2/part1/input.txt"};
+  auto input = std::ifstream{"day4/part1/input.txt"};
 
   auto line = std::string{};
 
   auto sum = std::uint32_t{0u};
 
+
   while (std::getline(input, line)) {
-    auto game_id = std::uint32_t{};
-    auto sets = std::unordered_map<std::string, std::uint32_t>{};
-    
-    auto game_id_substring = line.substr(5u, line.find(':') - 5u);
-    std::from_chars(game_id_substring.data(), game_id_substring.data() + game_id_substring.size(), game_id);
+    auto contents = line.substr(line.find_first_of(":") + 1u);
 
-    auto sets_substring = line.substr(line.find(':') + 2u);
-    auto sets_list = split(sets_substring, "; ");
+    auto lists = split(contents, "|");
 
-    for (auto set_string : sets_list) {
-      auto set_list = split(set_string, ", ");
+    auto winners = std::unordered_set<std::uint32_t>{};
+    auto score = 0u;
 
-      for (auto color_string : set_list) {
-        auto color_value_pair = split(color_string, " ");
+    for (const auto& winner : split(lists[0], " ")) {
+      auto value = std::uint32_t{0u};
 
-        auto value = std::uint32_t{};
-        std::from_chars(color_value_pair[0].data(), color_value_pair[0].data() + color_value_pair[0].size(), value);
+      const auto result = std::from_chars(winner.data(), winner.data() + winner.size(), value);
 
-        sets[color_value_pair[1]] = std::max(sets[color_value_pair[1]], value);
+      if (result.ec != std::errc::invalid_argument && result.ec != std::errc::result_out_of_range) {
+        winners.insert(value);
       }
     }
 
-    if (sets["red"] <= 12u && sets["green"] <= 13u && sets["blue"] <= 14u) {
-      sum += game_id;
+    for (const auto& winner : split(lists[1], " ")) {
+      auto value = std::uint32_t{0u};
+
+      const auto result = std::from_chars(winner.data(), winner.data() + winner.size(), value);
+
+      if (result.ec != std::errc::invalid_argument && result.ec != std::errc::result_out_of_range) {
+        if (winners.find(value) != winners.cend()) {
+          score = (score == 0u) ? 1u : score * 2u;
+        }
+      }
     }
+
+    sum += score;
   }
 
   fmt::print("Sum: {}\n", sum);

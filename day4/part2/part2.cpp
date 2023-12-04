@@ -2,10 +2,11 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <ranges>
 #include <vector>
+#include <ranges>
 #include <charconv>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
@@ -28,36 +29,69 @@ static auto split(std::string string, std::string delimiter) -> std::vector<std:
 }
 
 auto main() -> int {
-  auto input = std::ifstream{"day2/part1/input.txt"};
+  auto input = std::ifstream{"day4/part2/input.txt"};
 
   auto line = std::string{};
 
   auto sum = std::uint32_t{0u};
 
+  auto copies = std::vector<std::uint32_t>{};
+  auto card_count = 0u;
+  auto scores = std::unordered_map<std::uint32_t, std::uint32_t>{};
+
   while (std::getline(input, line)) {
-    auto game_id = std::uint32_t{};
-    auto sets = std::unordered_map<std::string, std::uint32_t>{};
-    
-    auto game_id_substring = line.substr(5u, line.find(':') - 5u);
-    std::from_chars(game_id_substring.data(), game_id_substring.data() + game_id_substring.size(), game_id);
+    auto contents = line.substr(line.find_first_of(":") + 1u);
 
-    auto sets_substring = line.substr(line.find(':') + 2u);
-    auto sets_list = split(sets_substring, "; ");
+    auto lists = split(contents, "|");
 
-    for (auto set_string : sets_list) {
-      auto set_list = split(set_string, ", ");
+    auto winners = std::unordered_set<std::uint32_t>{};
+    auto score = 0u;
 
-      for (auto color_string : set_list) {
-        auto color_value_pair = split(color_string, " ");
+    for (const auto& winner : split(lists[0], " ")) {
+      auto value = std::uint32_t{0u};
 
-        auto value = std::uint32_t{};
-        std::from_chars(color_value_pair[0].data(), color_value_pair[0].data() + color_value_pair[0].size(), value);
+      const auto result = std::from_chars(winner.data(), winner.data() + winner.size(), value);
 
-        sets[color_value_pair[1]] = std::max(sets[color_value_pair[1]], value);
+      if (result.ec != std::errc::invalid_argument && result.ec != std::errc::result_out_of_range) {
+        winners.insert(value);
       }
     }
 
-    sum += sets["red"] * sets["green"] * sets["blue"];
+    for (const auto& winner : split(lists[1], " ")) {
+      auto value = std::uint32_t{0u};
+
+      const auto result = std::from_chars(winner.data(), winner.data() + winner.size(), value);
+
+      if (result.ec != std::errc::invalid_argument && result.ec != std::errc::result_out_of_range) {
+        if (winners.find(value) != winners.cend()) {
+          score++;
+        }
+      }
+    }
+
+    scores[card_count] = score;
+
+    for (auto i = 1u; i <= score; ++i) {
+      copies.push_back(card_count + i);
+    }
+
+    sum++;
+    card_count++;
+  }
+
+  while (!copies.empty()) {
+    auto copy = copies.back();
+    copies.pop_back();
+
+    if (copy >= card_count) {
+      continue;
+    }
+
+    sum++;
+
+    for (auto i = 1u; i <= scores[copy]; ++i) {
+      copies.push_back(copy + i);
+    }
   }
 
   fmt::print("Sum: {}\n", sum);
